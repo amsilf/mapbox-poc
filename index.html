@@ -32,11 +32,11 @@
 		<div id="csp-checkbox">
 			<label>Select a Cloud Service Provider</label>
 			<br/>
-			<input type="checkbox" id="aws" name="aws" value="aws"><label for="aws">AWS</label>
+			<input type="checkbox" id="aws" name="aws" value="awslocations" checked><label for="aws">AWS</label>
 			<br/>
-			<input type="checkbox" id="gcp" name="gcp" value="gcp"><label for="gcp">GCP</label>
+			<input type="checkbox" id="gcp" name="gcp" value="gcplocations" checked><label for="gcp">GCP</label>
 			<br/>
-			<input type="checkbox" id="azure" name="azure" value="azure"><label for="azure">Azure</label>
+			<input type="checkbox" id="azure" name="azure" value="azurelocations" checked><label for="azure">Azure</label>
 		</div>
 
 		<div id="location-filter">
@@ -51,23 +51,44 @@
 		<br/>
 
 		<script>
+			function toggleLayer(layerName) {
+				const visibility = map.getLayoutProperty(layerName, 'visibility');
+				console.log(visibility)
+
+				// Toggle layer visibility by changing the layout object's visibility property.
+				if (visibility === 'visible') {
+					map.setLayoutProperty(layerName, 'visibility', 'none');
+					this.className = '';
+				} else {
+					this.className = 'active';
+					map.setLayoutProperty(
+						layerName,
+						'visibility',
+						'visible'
+					);
+				}
+
+			}
 
 			function flyToLocation(selectedObject) {
 				var value = selectedObject.value;
 				let newCenter = [0, 0];
-				let newZoom = 4
+				let newZoom = 4;
 
 				if (value === 'europe') {
 					newCenter = [15, 48]
+					newZoom = 4;
 				}
 
 				if (value === 'africa') {
-					newCenter = [10, 0]
+					newCenter = [10, 0];
+					newZoom = 3;
 				}
 
 				map.flyTo({
 					center: newCenter,
-					essential: true // this animation is considered essential with respect to prefers-reduced-motion
+					essential: true, // this animation is considered essential with respect to prefers-reduced-motion
+					zoom: newZoom
 				});
 
 			}
@@ -81,6 +102,39 @@
 			});
 			map.addControl(new mapboxgl.NavigationControl());
 			map.addControl(new mapboxgl.FullscreenControl());
+
+			map.on('idle', () => {
+				checkboxesIds = ['aws', 'gcp', 'azure']
+				for(const id of checkboxesIds) {
+					const checkbox = document.getElementById(id);
+					checkbox.onchange = function(e) {
+						const layerName = this.value
+						e.preventDefault();
+						e.stopPropagation();
+
+						const visibility = map.getLayoutProperty(layerName, 'visibility');
+						
+						// FIXME: the value is undefined on a first click, but I don't wanna to deep dive to fix it
+						if(visibility === undefined) {
+							this.checked = true
+						}
+
+						// Toggle layer visibility by changing the layout object's visibility property.
+						if (visibility === 'visible') {
+							map.setLayoutProperty(layerName, 'visibility', 'none');
+							this.className = '';
+						} else {
+							this.className = 'active';
+							map.setLayoutProperty(
+								layerName,
+								'visibility',
+								'visible'
+							);
+						}
+
+					}
+				}
+			});
 
 		</script>
 	 
