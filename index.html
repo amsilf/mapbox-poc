@@ -32,11 +32,11 @@
 		<div id="csp-checkbox">
 			<label>Select a Cloud Service Provider</label>
 			<br/>
-			<input type="checkbox" id="aws" name="aws" value="awslocations" checked><label for="aws">AWS</label>
+			<input type="checkbox" id="aws" name="aws" value="AwsLocations" checked><label for="aws">AWS</label>
 			<br/>
-			<input type="checkbox" id="gcp" name="gcp" value="gcplocations" checked><label for="gcp">GCP</label>
+			<input type="checkbox" id="gcp" name="gcp" value="GcpLocations" checked><label for="gcp">GCP</label>
 			<br/>
-			<input type="checkbox" id="azure" name="azure" value="azurelocations" checked><label for="azure">Azure</label>
+			<input type="checkbox" id="azure" name="azure" value="AzureLocations" checked><label for="azure">Azure</label>
 		</div>
 
 		<div id="location-filter">
@@ -49,6 +49,9 @@
 
 		<div id="map"></div>
 		<br/>
+		<div id="shown-unique-ids">
+			<label id="visible-ids"></label>
+		</div>
 
 		<script>
 			function toggleLayer(layerName) {
@@ -93,15 +96,31 @@
 
 			}
 
-			mapboxgl.accessToken = '';
+			mapboxgl.accessToken = 'PLACE THE ACCESS TOKEN HERE';
 			const map = new mapboxgl.Map({
-			container: 'map',
-				style: 'mapbox://styles/amsilf/cl41dlo6p001914n0chscjy0q/draft',
+				container: 'map',
+				style: 'mapbox://styles/cloudmatch/cl6xofpci00e515npnla6yyvm/draft',
 				center: [15, 48],
+				projection: 'mercator',
 				zoom: 4
 			});
 			map.addControl(new mapboxgl.NavigationControl());
 			map.addControl(new mapboxgl.FullscreenControl());
+
+			map.on('moveend', () => {
+				const features = map.queryRenderedFeatures({ layers: ['AwsLocations', 'AzureLocations', 'GcpLocations'] });
+
+				if (features) {
+					let uniqueIds = new Set(); 
+					for (const feature of features) {
+						console.log(feature);
+						uniqueIds.add(feature.properties['un_geography_id']);
+					}
+
+					const visibleUniqueIds = Array.from(uniqueIds).join(', ')
+					document.getElementById("visible-ids").innerHTML = visibleUniqueIds;
+				}
+			});
 
 			map.on('idle', () => {
 				checkboxesIds = ['aws', 'gcp', 'azure']
